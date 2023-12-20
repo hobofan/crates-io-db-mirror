@@ -58,11 +58,8 @@ CREATE TABLE crates_io.crate_owners (
         COMMENT 'This refers either to the `users.id` or `teams.id` column, depending on the value of the `owner_kind` column',
     created_at DateTime64(6, 'UTC') DEFAULT now() NOT NULL,
     created_by integer,
-    deleted boolean DEFAULT false NOT NULL,
-    updated_at DateTime64(6, 'UTC') DEFAULT now() NOT NULL,
     owner_kind integer NOT NULL
         COMMENT '`owner_kind = 0` refers to `users`, `owner_kind = 1` refers to `teams`.',
-    email_notifications boolean DEFAULT true NOT NULL
 )
 ENGINE = MergeTree()
 PRIMARY KEY (crate_id, owner_id, owner_kind)
@@ -79,12 +76,12 @@ CREATE TABLE crates_io.crates (
     created_at DateTime64(6, 'UTC') DEFAULT now() NOT NULL,
     downloads integer DEFAULT 0 NOT NULL,
     description character varying,
-    homepage character varying,
-    documentation character varying,
-    readme character varying,
+    homepage character varying DEFAULT NULL,
+    documentation character varying DEFAULT NULL,
+    readme character varying DEFAULT NULL,
 -- NOTE: This column was removed, as it didn't appear in the import
 -- textsearchable_index_col tsvector NOT NULL,
-    repository character varying,
+    repository character varying DEFAULT NULL,
     max_upload_size integer,
     max_features smallint
 )
@@ -131,9 +128,9 @@ CREATE TABLE crates_io.dependencies (
                                      default_features boolean NOT NULL,
     -- TODO: Correct datatype + import parsing
                                      features character varying NOT NULL,
-                                     target character varying,
+                                     target character varying DEFAULT NULL,
                                      kind integer DEFAULT 0 NOT NULL,
-                                     explicit_name character varying
+                                     explicit_name character varying DEFAULT NULL
 )
 ENGINE = MergeTree()
 PRIMARY KEY (id)
@@ -201,13 +198,10 @@ PRIMARY KEY (id)
 
 CREATE TABLE crates_io.users (
     id integer NOT NULL,
-    gh_access_token character varying NOT NULL,
     gh_login character varying NOT NULL,
     name character varying,
-    gh_avatar character varying,
+    gh_avatar character varying DEFAULT NULL,
     gh_id integer NOT NULL,
-    -- account_lock_reason character varying,
-    -- account_lock_until timestamp without time zone
 )
 ENGINE = MergeTree()
 PRIMARY KEY (id)
@@ -220,9 +214,7 @@ PRIMARY KEY (id)
 CREATE TABLE crates_io.version_downloads (
                                           version_id integer NOT NULL,
                                           downloads integer DEFAULT 1 NOT NULL,
-                                          counted integer DEFAULT 0 NOT NULL,
                                           date date DEFAULT now() NOT NULL,
-                                          processed boolean DEFAULT false NOT NULL
 )
 ENGINE = MergeTree()
 PRIMARY KEY (version_id, date)
@@ -233,23 +225,23 @@ PRIMARY KEY (version_id, date)
 --
 
 CREATE TABLE crates_io.versions (
-                                 id integer NOT NULL,
-                                 crate_id integer NOT NULL,
-                                 num character varying NOT NULL,
-                                 updated_at DateTime64(6, 'UTC') DEFAULT now() NOT NULL,
-                                 created_at DateTime64(6, 'UTC') DEFAULT now() NOT NULL,
-                                 downloads integer DEFAULT 0 NOT NULL,
+    id integer NOT NULL,
+    crate_id integer NOT NULL,
+    num character varying NOT NULL,
+    updated_at DateTime64(6, 'UTC') DEFAULT now() NOT NULL,
+    created_at DateTime64(6, 'UTC') DEFAULT now() NOT NULL,
+    downloads integer DEFAULT 0 NOT NULL,
 -- TODO
---                                  features jsonb DEFAULT '{}'::jsonb NOT NULL,
-                                 yanked boolean DEFAULT false NOT NULL,
-                                 license character varying,
-                                 crate_size integer,
-                                 published_by integer,
-                                 checksum character(64) NOT NULL,
-                                 links character varying,
-                                 rust_version character varying,
+-- features jsonb DEFAULT '{}'::jsonb NOT NULL,
+    yanked boolean DEFAULT false NOT NULL,
+    license character varying,
+    crate_size integer,
+    published_by integer,
+    checksum character(64) NOT NULL,
+    links character varying DEFAULT NULL,
+    rust_version character varying DEFAULT NULL,
 -- TODO
---                                  semver_no_prerelease public.semver_triple GENERATED ALWAYS AS (public.to_semver_no_prerelease((num)::text)) STORED
+-- semver_no_prerelease public.semver_triple GENERATED ALWAYS AS (public.to_semver_no_prerelease((num)::text)) STORED
 )
 ENGINE = MergeTree()
 -- TODO
