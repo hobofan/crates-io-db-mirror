@@ -220,6 +220,27 @@ ENGINE = MergeTree()
 PRIMARY KEY (version_id, date)
 ;
 
+
+--
+-- Name: to_semver_no_prerelease(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+DROP FUNCTION IF EXISTS to_semver_no_prerelease;
+CREATE FUNCTION to_semver_no_prerelease AS (num) ->
+    if(
+        position(splitByChar('+', num)[1], '-') == 0,
+        (
+            splitByChar('.', num)[1],
+            splitByChar('.', num)[2],
+            splitByChar('.', splitByChar('+', num)[1])[3]
+        ),
+        (
+            NULL,
+            NULL,
+            NULL
+        )
+    );
+
 --
 -- Name: versions; Type: TABLE; Schema: public; Owner: -
 --
@@ -242,6 +263,11 @@ CREATE TABLE crates_io.versions (
     rust_version character varying DEFAULT NULL,
 -- TODO
 -- semver_no_prerelease public.semver_triple GENERATED ALWAYS AS (public.to_semver_no_prerelease((num)::text)) STORED
+    semver_no_prerelease Tuple(
+        major Nullable(UInt16),
+        minor Nullable(UInt16),
+        teeny Nullable(UInt16)
+    ) MATERIALIZED to_semver_no_prerelease(num)
 )
 ENGINE = MergeTree()
 -- TODO

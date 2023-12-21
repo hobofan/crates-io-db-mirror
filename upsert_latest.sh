@@ -14,7 +14,9 @@ data_dir=$(gfind ./data -mindepth 1 -maxdepth 1 -type d -printf "%T+ %p\n" | sor
 
 # Save the absolute path of the file ./schema.sql into a variable
 schema_file="$(pwd)/schema.sql"
+views_schema_file="$(pwd)/views_schema.sql"
 
 # cd into that directory and run the command
 cd "${data_dir}"
 clickhouse client --queries-file "${schema_file}"
+clickhouse client --queries-file "${views_schema_file}"
